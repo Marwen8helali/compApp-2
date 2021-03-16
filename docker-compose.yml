@@ -1,0 +1,57 @@
+version: '3.1'
+services:
+  mysql-db:
+    env_file: ./.env
+    image: mysql:5.7
+    container_name: mysql-db
+    volumes:
+      - ./data/db:/var/lib/mysql
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      "MYSQL_DATABASE": "root"
+      "MYSQL_ROOT_PASSWORD": "root"
+        
+  phpmyadmin:
+    links:
+      - mysql-db
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - '8080:80'
+    environment:
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: admin
+        
+  springapplication:
+    build: ../compApp-2
+    restart: on-failure
+    container_name: springapplication
+    ports:
+      - 8081:8082
+    environment:
+      WAIT_HOSTS: mysql-db:3306
+    depends_on:
+      - mysql-db
+    volumes:
+      - ./Spring/target/docker-compose.jar:/docker-compose.jar
+    
+       
+  frontendapp:
+    
+    build: ~/../../workspace/testSprigDocker/frontend-app
+    container_name: frontendapp
+    ports:
+      - 4200:80
+    depends_on:
+      - springapplication
+    environment:
+      WAIT_HOSTS: springapplication:8081
+    volumes:
+      - ./Spring/target/docker-compose.jar:/docker-compose.jar
+      
+
+
+
+  
+  
